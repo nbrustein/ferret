@@ -6,6 +6,13 @@ class Ferret::Adapters::Mongo
     @configuration = configuration
   end
   
+  def find_feature(key)
+    if doc = features_collection.find_one('key' => key)
+      doc.delete('_id')
+      doc
+    end
+  end
+  
   def collection(collection_name)
     @collections ||= {}
     @collections[collection_name] ||= get_collection(collection_name)
@@ -42,7 +49,6 @@ class Ferret::Adapters::Mongo
       end
     else
       port = env['port'] || 27017
-      puts "Mongo::MongoClient.new(#{env['host']}, #{port}, #{options})"
       Mongo::MongoClient.new(env['host'], port, options)
     end
 
@@ -55,14 +61,17 @@ class Ferret::Adapters::Mongo
     
     # FIXME: In each case, how do we detect and respond if the save fails?
     if feature.new?
+      feature.revision += 1
       features_collection.save(feature.as_json)
     elsif feature.only_last_update_is_dirty?
-      features_collection.update(feature.identifying_hash(true), {
+      features_collection.update({'key' => feature.key}, {
         '$push' => {'updates' => feature.dirty_update},
         '$inc' => {'revision' => 1}
       })
+      feature.revision += 1
     elsif feature.all_updates_loaded?
-      features_collection.update(feature.identifying_hash(true), feature.as_json)
+      feature.revision += 1
+      features_collection.update({'key' => feature.key}, feature.as_json)
     else
       raise "something"
     end

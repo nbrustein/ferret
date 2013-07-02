@@ -11,42 +11,78 @@ class Ferret::Feature::Base
   
   delegate :adapter, :to => :configuration
   
-  attr_accessor :subject_uri, :object_uri, :updates, :revision
-  validates_presence_of :subject_uri, :object_uri, :updates, :revision
+  attr_accessor :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
+  validates_presence_of :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
   
   define_model_callbacks :validate
   after_validate :validate_updates
   
   class << self
+    
+    delegate :adapter, :to => :configuration
+    
     def configuration=(config_name)
       @configuration = Ferret::Configuration.load(config_name) 
     end
     alias :set_configuration :configuration= 
   
     def configuration
-      @configuration ||= Ferret::Configuration.load_default
+      if defined? @configuration
+        @configuration
+      elsif superclass.respond_to?(:configuration)
+        superclass.configuration
+      else
+        @configuration = Ferret::Configuration.load_default
+      end
+    end
+    
+    def find(identifying_hash_or_key)
+      key = identifying_hash_or_key.is_a?(Hash) ? get_key(identifying_hash_or_key) : identifying_hash_or_key
+      hash = adapter.find_feature(key)
+      from_hash(hash)
+    end
+    
+    def get_key(hash)
+      [
+        hash['feature_type'],
+        hash['subject_uri'],
+        hash['object_uri']
+      ].join("~~~")
+    end
+    
+    def from_hash(hash)
+      updates = hash['updates'] || []
+      updates = updates.map do |update|
+        if update.is_a?(Hash)
+          self::Update.new(update)
+        elsif update.is_a?(self.class::Update)
+          update
+        else
+          raise Ferret::NotAndUpdate.new(update)
+        end
+      end
+      new(hash.merge({
+        'updates' => updates
+      }))
     end
     
   end
   
   def initialize(attrs)
-    raise "No FEATURE_TYPE constant defined for #{self.class.name.inspect}" unless self.class.const_defined?(:FEATURE_TYPE)
     super({
       'updates' => []
     }.merge(attrs))
+    self.feature_type = self.class::FEATURE_TYPE
+    self.revision = 0 if self.revision.nil?
   end
   
   def new?
-    revision.nil? || revision == 0
+    revision == 0
   end
   
   def dirty?
     return true if new?
     return if !!updates.detect(&:dirty?)
-  end
-  
-  def feature_type
-    self.class::FEATURE_TYPE
   end
   
   def identifying_hash(include_revision = false)
@@ -74,10 +110,19 @@ class Ferret::Feature::Base
     self.class.configuration
   end
   
+  def adapter
+    self.class.adapter
+  end
+  
   def as_json
     identifying_hash(true).merge({
+      'key' => key,
       'updates' => updates.map(&:as_json)
     })
+  end
+  
+  def key
+    self.class.get_key(identifying_hash)
   end
   
   private
@@ -89,11 +134,6 @@ class Ferret::Feature::Base
         end
       end
     end
-  end
-  
-  private
-  def adapter
-    configuration.adapter  
   end
   
 end

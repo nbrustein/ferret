@@ -14,6 +14,12 @@ module Ferret
     end
   end
   
+  class NotAndUpdate < RuntimeError
+    def new(arg)
+      super("Cannot create an instance of #{Ferret::Feature::Update} from #{arg.inspect}")
+    end
+  end
+  
   class InvalidFeatureUpdate < RuntimeError; end
   class InvalidFeature < RuntimeError; end
   

@@ -18,14 +18,14 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
         'object_uri' => 'o',
         'updates' => [
           TestFeature::Update.new({
-            'time' => Time.at(0),
+            'time' => Time.at(0).utc,
             'value' => 'value'
           })
         ]
       })
       feature.save!
       assert_equal 1, feature.revision
-      reloaded = TestFeature.find(feature.identifying_attributes)
+      reloaded = TestFeature.find(feature.identifying_hash)
       assert_equal feature.as_json, reloaded.as_json
     end
   
