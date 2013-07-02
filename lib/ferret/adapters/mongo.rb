@@ -1,3 +1,4 @@
+require 'mongo'
 require File.expand_path("../../adapters", __FILE__)
 
 class Ferret::Adapters::Mongo

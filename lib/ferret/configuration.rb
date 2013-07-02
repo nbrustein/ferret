@@ -1,3 +1,4 @@
+require 'yaml'
 require File.expand_path("../../ferret", __FILE__)
 
 class Ferret::Configuration

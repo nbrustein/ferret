@@ -1,3 +1,4 @@
+require 'active_model'
 require File.expand_path("../../feature", __FILE__)
 require File.expand_path("../update", __FILE__)
 

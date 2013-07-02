@@ -1,20 +1,26 @@
-# -*- encoding: utf-8 -*-
-#$:.push File.expand_path("../lib", __FILE__)
+# coding: utf-8
+lib = File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+require 'ferret/version'
 
-Gem::Specification.new do |s|
-  s.name              = "ferret"
-  s.version           = "0.0.1"
-  s.authors           = ["nbrustein"]
-  s.email             = %q{nbrustein@gmail.com}
-  s.homepage          = %q{https://github.com/nbrustein}
-  s.summary           = %q{FIXME}
-  s.description       = %q{FIXME}
-  s.files = Dir.glob("{lib,test}/**/*") + %w[README.rdoc]
-  
-  s.add_dependency "activesupport", ">= 4.0.0"
-  s.add_dependency "activemodel", ">= 4.0.0"
-  s.add_dependency "tzinfo"
-  
-  # s.require_paths = ["lib"]
-  # s.files = ["hbase_model", "hbase_model/base"]
+Gem::Specification.new do |spec|
+  spec.name          = "ferret"
+  spec.version       = Ferret::VERSION
+  spec.authors       = ["nbrustein"]
+  spec.email         = ["nbrustein@gmail.com"]
+  spec.description   = %q{TODO: Write a gem description}
+  spec.summary       = %q{TODO: Write a gem summary}
+  spec.homepage      = ""
+  spec.license       = "MIT"
+
+  spec.files         = `git ls-files`.split($/)
+  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
+  spec.require_paths = ["lib"]
+
+  spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "rake"
+  spec.add_dependency "activesupport", ">= 4.0.0"
+  spec.add_dependency "activemodel", ">= 4.0.0"
+  spec.add_dependency "mongo", ">= 1.9"
 end
