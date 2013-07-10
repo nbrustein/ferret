@@ -20,9 +20,15 @@
   #   - nil
   # - - staff.mongohq.com
   #   - 10015
-  
-mongo_adapter_test:
+
+mongo_test: &mongo_test
   adapter: mongodb
   database: ferret_test
   host: localhost
-  port: ~ 
+  port: ~  
+
+mongo_adapter_test:
+  <<: *mongo_test
+  
+ferret_gem_test:
+  <<: *mongo_test

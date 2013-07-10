@@ -39,7 +39,7 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
       })
       feature.save!
       assert_equal 1, feature.revision
-      reloaded = TestFeature.find(feature.identifying_hash)
+      reloaded = Ferret::Feature.find(feature.identifying_hash)
       assert_equal TestFeature, reloaded.class
       assert_equal feature.as_json, reloaded.as_json
     end
@@ -50,7 +50,7 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
         'key' => 'key'
       })
       event.save!
-      reloaded = TestEvent.find(event.key)
+      reloaded = Ferret::Event.find(event.key)
       assert_equal TestEvent, reloaded.class
       assert_equal event.as_json, reloaded.as_json
     end
