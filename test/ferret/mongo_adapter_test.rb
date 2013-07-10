@@ -11,8 +11,22 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
       
       set_configuration "mongo_adapter_test"
     end
+    
+    class TestEvent < Ferret::Event::Base
+      EVENT_TYPE = "test_event"
+      
+      set_configuration "mongo_adapter_test"
+      
+      attr_accessor :prop
+      validates_presence_of :prop
+    end
+    
+    def teardown
+      TestFeature.clear_collection
+      TestEvent.clear_collection
+    end
   
-    def test_saving_a_new_feature
+    def test_saving_and_retrieving_a_feature
       feature = TestFeature.new({
         'subject_uri' => 's',
         'object_uri' => 'o',
@@ -26,7 +40,19 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
       feature.save!
       assert_equal 1, feature.revision
       reloaded = TestFeature.find(feature.identifying_hash)
+      assert_equal TestFeature, reloaded.class
       assert_equal feature.as_json, reloaded.as_json
+    end
+    
+    def test_saving_and_retrieving_an_event
+      event = TestEvent.new({
+        'prop' => 'value',
+        'key' => 'key'
+      })
+      event.save!
+      reloaded = TestEvent.find(event.key)
+      assert_equal TestEvent, reloaded.class
+      assert_equal event.as_json, reloaded.as_json
     end
   
   end

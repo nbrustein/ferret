@@ -1,5 +1,6 @@
 require 'active_model'
 require File.expand_path("../../feature", __FILE__)
+require File.expand_path("../../adaptable", __FILE__)
 require File.expand_path("../update", __FILE__)
 
 # has a subject_uri, a feature_type, and an object_uri
@@ -7,6 +8,7 @@ require File.expand_path("../update", __FILE__)
 # can have any number of updates
 class Ferret::Feature::Base
   include ActiveModel::Model
+  include Ferret::Adaptable
   
   Update = Ferret::Feature::Update
   
@@ -15,26 +17,12 @@ class Ferret::Feature::Base
   attr_accessor :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
   validates_presence_of :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
   
-  define_model_callbacks :validate
-  after_validate :validate_updates
+  after_validation :validate_updates
   
   class << self
     
-    delegate :adapter, :to => :configuration
-    
-    def configuration=(config_name)
-      @configuration = Ferret::Configuration.load(config_name) 
-    end
-    alias :set_configuration :configuration= 
-  
-    def configuration
-      if defined? @configuration
-        @configuration
-      elsif superclass.respond_to?(:configuration)
-        superclass.configuration
-      else
-        @configuration = Ferret::Configuration.load_default
-      end
+    def clear_collection
+      adapter.features_collection.remove
     end
     
     def find(identifying_hash_or_key)
@@ -99,20 +87,6 @@ class Ferret::Feature::Base
   def save!
     raise Ferret::InvalidFeature.new(errors.full_messages) unless valid?
     adapter.save_feature(self)
-  end
-  
-  def run_validations!
-    run_callbacks :validate do
-      super
-    end
-  end
-  
-  def configuration
-    self.class.configuration
-  end
-  
-  def adapter
-    self.class.adapter
   end
   
   def as_json

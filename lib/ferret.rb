@@ -1,5 +1,4 @@
 module Ferret
-  #autoload :Base, 'hbase_model/base'
   
   class << self
     

@@ -8,7 +8,11 @@ class Ferret::Configuration
   end
   
   def self.load_default
-    load(Rails.env)
+    if defined? Rails
+      load(Rails.env)
+    else
+      raise Ferret::NoDefaultConfiguration
+    end
   end
   
   def self.load(config_name)
