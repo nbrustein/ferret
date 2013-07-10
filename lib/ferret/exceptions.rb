@@ -30,4 +30,5 @@ module Ferret
   class InvalidFeature < RuntimeError; end
   class InvalidEvent < RuntimeError; end
   class MalformedFeatureValue < RuntimeError; end
+  class UnexpectedEventType < RuntimeError; end
 end

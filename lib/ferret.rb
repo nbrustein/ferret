@@ -10,19 +10,13 @@ module Ferret
       adapter.clear_databases
     end
     
-    def with_configuration(config_name, &block)
-      original_configuration = @configuration
-      set_configuration(config_name)
-      yield
-    ensure
-      set_configuration(original_configuration) unless original_configuration.nil?
-    end
-
-    def configuration
+    def configuration(load_default = true)
       if defined? @configuration
         @configuration
-      else
+      elsif load_default
         @configuration = Ferret::Configuration.load_default
+      else
+        nil
       end
     end
 
@@ -30,7 +24,6 @@ module Ferret
       configuration.adapter
     end
     
-    private
     def set_configuration(config)
       if config.is_a?(String)
         config = Ferret::Configuration.load(config)

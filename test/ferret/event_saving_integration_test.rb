@@ -1,7 +1,6 @@
-require 'test/unit'
-require 'ferret'
+require File.expand_path("../ferret_test_base", __FILE__)
 
-class Ferret::EventSavingIntegrationTest < Test::Unit::TestCase
+class Ferret::EventSavingIntegrationTest < Ferret::FerretTestBase
   
   class TestEvent < Ferret::Event::Base
     EVENT_TYPE = "test_event"
