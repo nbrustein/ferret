@@ -6,6 +6,38 @@ module Ferret
       File.expand_path("../../", __FILE__)
     end
     
+    def clear_databases
+      adapter.clear_databases
+    end
+    
+    def with_configuration(config_name, &block)
+      original_configuration = @configuration
+      set_configuration(config_name)
+      yield
+    ensure
+      set_configuration(original_configuration) unless original_configuration.nil?
+    end
+
+    def configuration
+      if defined? @configuration
+        @configuration
+      else
+        @configuration = Ferret::Configuration.load_default
+      end
+    end
+
+    def adapter
+      configuration.adapter
+    end
+    
+    private
+    def set_configuration(config)
+      if config.is_a?(String)
+        config = Ferret::Configuration.load(config)
+      end
+      @configuration = config
+    end
+    
   end
 end
 

@@ -1,18 +1,13 @@
 require 'active_model'
 require File.expand_path("../../event", __FILE__)
-require File.expand_path("../../adaptable", __FILE__)
-require 'json-schema'
+require 'active_support/core_ext/object/instance_variables'
 
 class Ferret::Event::Base
   include ActiveModel::Model
-  include Ferret::Adaptable
   
   attr_accessor :key
   
   class << self
-    def clear_collection
-      adapter.events_collection.remove
-    end
     
     def find(key)
       hash = adapter.find_event(key)
@@ -39,7 +34,7 @@ class Ferret::Event::Base
   
   def save!
     raise Ferret::InvalidEvent.new(errors.full_messages) unless valid?
-    adapter.save_event(self)
+    Ferret.adapter.save_event(self)
   end
   
   def as_json

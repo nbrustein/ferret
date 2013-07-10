@@ -1,6 +1,5 @@
 require 'active_model'
 require File.expand_path("../../feature", __FILE__)
-require File.expand_path("../../adaptable", __FILE__)
 require File.expand_path("../update", __FILE__)
 
 # has a subject_uri, a feature_type, and an object_uri
@@ -8,11 +7,9 @@ require File.expand_path("../update", __FILE__)
 # can have any number of updates
 class Ferret::Feature::Base
   include ActiveModel::Model
-  include Ferret::Adaptable
+  include ActiveModel::Validations::Callbacks
   
   Update = Ferret::Feature::Update
-  
-  delegate :adapter, :to => :configuration
   
   attr_accessor :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
   validates_presence_of :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
@@ -20,24 +17,6 @@ class Ferret::Feature::Base
   after_validation :validate_updates
   
   class << self
-    
-    def clear_collection
-      adapter.features_collection.remove
-    end
-    
-    def find(identifying_hash_or_key)
-      key = identifying_hash_or_key.is_a?(Hash) ? get_key(identifying_hash_or_key) : identifying_hash_or_key
-      hash = adapter.find_feature(key)
-      from_hash(hash)
-    end
-    
-    def get_key(hash)
-      [
-        hash['feature_type'],
-        hash['subject_uri'],
-        hash['object_uri']
-      ].join("~~~")
-    end
     
     def from_hash(hash)
       updates = hash['updates'] || []
@@ -86,18 +65,19 @@ class Ferret::Feature::Base
   
   def save!
     raise Ferret::InvalidFeature.new(errors.full_messages) unless valid?
-    adapter.save_feature(self)
+    Ferret.adapter.save_feature(self)
   end
   
   def as_json
     identifying_hash(true).merge({
       'key' => key,
-      'updates' => updates.map(&:as_json)
+      'updates' => updates.map(&:as_json),
+      '_type' => self.class.name
     })
   end
   
   def key
-    self.class.get_key(identifying_hash)
+    Ferret::Feature.get_key(identifying_hash)
   end
   
   private

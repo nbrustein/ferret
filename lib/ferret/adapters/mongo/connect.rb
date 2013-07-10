@@ -10,6 +10,11 @@ class Ferret::Adapters::Mongo
       connect unless @database
       @database.collection(collection_name)
     end
+    
+    def clear_databases
+      events_collection.remove
+      features_collection.remove
+    end
 
     # adapted from MongoMapper 0.12.0
     def connect
