@@ -16,6 +16,16 @@ class Ferret::FerretTestBase < ActiveSupport::TestCase
       @config_name = config_name
     end
     
+    def stub_feature_classes(classes)
+      setup(Proc.new {
+        Ferret::Feature.stubs(:feature_classes).returns(classes)
+      })
+    end
+    
+  end
+  
+  def stub_feature_classes(classes)
+    Ferret::Feature.stubs(:feature_classes).returns(classes)
   end
   
   def set_configuration

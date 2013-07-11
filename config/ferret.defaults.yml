@@ -21,7 +21,11 @@
   # - - staff.mongohq.com
   #   - 10015
 
+defaults: &defaults
+  features: []
+
 mongo_test: &mongo_test
+  <<: *defaults
   adapter: mongodb
   database: ferret_test
   host: localhost

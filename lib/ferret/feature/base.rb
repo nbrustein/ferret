@@ -1,4 +1,5 @@
 require 'active_model'
+require 'active_support/core_ext/class/subclasses'
 require File.expand_path("../../feature", __FILE__)
 require File.expand_path("../update", __FILE__)
 
@@ -35,7 +36,7 @@ class Ferret::Feature::Base
     end
     
     def update_for_event(event)
-      subject_uris = subject_uris_for_event(event)
+      subject_uris = self.subject_uris_for_event(event)
       return if subject_uris.nil?
       subject_uris = [subject_uris] unless subject_uris.is_a?(Array)
       
@@ -62,8 +63,8 @@ class Ferret::Feature::Base
     
     # interface methods
     ['event_types', 'subject_uris_for_event', 'object_uris_for_subject_and_event', 'update'].each do |meth|
-      define_method(meth.to_sym) do
-        raise NotImplementedError.new("Subclasses of #{Ferret::Feature::Base.name} should define #{meth.inspect}. #{self.class.name} does not.")
+      define_method(meth.to_sym) do |*args|
+        raise NotImplementedError.new("Subclasses of #{Ferret::Feature::Base.name} should define #{meth.inspect}. #{self.name} does not.")
       end  
     end
     

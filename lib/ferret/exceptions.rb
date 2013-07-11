@@ -32,6 +32,7 @@ module Ferret
     end
   end
   
+  class InvalidConfiguration < RuntimeError; end
   class OutOfDateFeature < RuntimeError; end
   class InvalidFeatureUpdate < RuntimeError; end
   class InvalidFeature < RuntimeError; end

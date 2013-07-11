@@ -37,6 +37,8 @@ class Ferret::EventSavingIntegrationTest < Ferret::FerretTestBase
 
   end
   
+  stub_feature_classes [TestFeature]
+  
   def test_updating_a_feature_when_saving_an_event
     params = {
       'subject_uri' => 'subject_uri',

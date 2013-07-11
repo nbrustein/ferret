@@ -49,4 +49,15 @@ class Ferret::Configuration
     @adapter ||= Ferret::Adapters.get(@config['adapter']).new(@config)
   end
   
+  def feature_classes
+    @feature_classes ||= get('features').map(&:constantize)
+  end
+  
+  def get(key, options = {:required => true})
+    if options[:required] && !@config.key?(key)
+      raise Ferret::InvalidConfiguration.new("Required key #{key.inspect} is missing from ferret configuration.")
+    end
+    @config[key]
+  end
+  
 end

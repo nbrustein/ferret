@@ -19,6 +19,7 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
     end
     
     def test_saving_and_retrieving_a_feature
+      stub_feature_classes [TestFeature]
       Time.stubs(:now).returns(Time.at(0).utc) # make sure all updates have the same updated_at
       feature = TestFeature.new({
         'subject_uri' => 's',
@@ -40,7 +41,9 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
     def test_saving_and_retrieving_an_event
       event = TestEvent.new({
         'prop' => 'value',
-        'key' => 'key'
+        'key' => 'key',
+        'start_time' => Time.at(0),
+        'finish_time' => Time.at(1)
       })
       event.save!
       reloaded = Ferret::Event.find(event.key)

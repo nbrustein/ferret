@@ -22,10 +22,7 @@ module Ferret::Feature
   end
   
   def self.feature_classes
-    # FIXME: do we really want to rely on subclasses here?  This leaves us open
-    # to nastiness from leftover side effects in tests.  Just puts the wrong kind of
-    # responsibility on a global
-    Ferret::Feature::Base.subclasses
+    Ferret.configuration.feature_classes
   end
   
   def self.get_features(subject_uri, feature_type, object_uris = :all, options = {})
