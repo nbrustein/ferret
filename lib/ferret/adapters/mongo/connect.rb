@@ -1,3 +1,4 @@
+module Ferret::Adapters; end
 class Ferret::Adapters::Mongo
   module Connect
     

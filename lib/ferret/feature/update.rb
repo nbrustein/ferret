@@ -12,6 +12,10 @@ class Ferret::Feature::Update
     }.merge(attrs))
   end
   
+  def dirty?
+    self.new || false
+  end
+  
   def as_json
     {
       'time' => time.utc,

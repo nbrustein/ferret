@@ -26,6 +26,13 @@ module Ferret
     end
   end
   
+  class UnknownFeatureType < RuntimeError
+    def initialize(feature_type)
+      super("No klass found for feature_type #{feature_type.inspect}")
+    end
+  end
+  
+  class OutOfDateFeature < RuntimeError; end
   class InvalidFeatureUpdate < RuntimeError; end
   class InvalidFeature < RuntimeError; end
   class InvalidEvent < RuntimeError; end

@@ -1,3 +1,4 @@
+module Ferret::Adapters; end
 class Ferret::Adapters::Mongo
   module Feature
     
@@ -8,21 +9,40 @@ class Ferret::Adapters::Mongo
     
     def find_feature(key)
       if doc = features_collection.find_one('key' => key)
-        doc.delete('_id')
-        doc
+        prepare_doc(doc)
+      end
+    end
+    
+    def find_features(subject_uri, feature_type, object_uris, options = {})
+      selector = {
+        'subject_uri' => subject_uri,
+        'feature_type' => feature_type
+      }
+      find_options = {}
+      
+      unless object_uris == :all
+        selector['object_uri'] = {'$in' => object_uris}
+      end
+      
+      if options['updates_limit']
+        find_options[:fields] ||= {}
+        find_options[:fields]['asdasdas'] = { '$slice' => -options['updates_limit'] }
+      end
+      
+      docs = features_collection.find(selector, find_options)
+      docs.map do |doc|
+        prepare_doc(doc)
       end
     end
 
     def save_feature(feature)
-      return false unless feature.dirty?
-
       # FIXME: In each case, how do we detect and respond if the save fails?
       if feature.new?
         feature.revision += 1
         features_collection.save(feature.as_json)
       elsif feature.only_last_update_is_dirty?
         features_collection.update({'key' => feature.key}, {
-          '$push' => {'updates' => feature.dirty_update},
+          '$push' => {'updates' => feature.updates.last.as_json},
           '$inc' => {'revision' => 1}
         })
         feature.revision += 1
@@ -42,5 +62,10 @@ class Ferret::Adapters::Mongo
     # - if the last update is later than the time of the new update, then load up
     #   all updates, re-calculate, and re-save the whole document
     
+    private
+    def prepare_doc(doc)
+      doc.delete('_id')
+      doc
+    end
   end
 end

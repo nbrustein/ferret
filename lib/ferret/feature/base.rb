@@ -34,6 +34,39 @@ class Ferret::Feature::Base
       }))
     end
     
+    def update_for_event(event)
+      subject_uris = subject_uris_for_event(event)
+      return if subject_uris.nil?
+      subject_uris = [subject_uris] unless subject_uris.is_a?(Array)
+      
+      subject_uris.each do |subject_uri|
+        object_uris = object_uris_for_subject_and_event(subject_uri, event)
+        next if object_uris.nil?
+        object_uris = [object_uris] unless object_uris.is_a?(Array)
+        features = Ferret::Feature.get_features(
+          subject_uri, 
+          self::FEATURE_TYPE, 
+          object_uris,
+          {
+            'updates_start' => {'last_before' => event.finish_time}
+          })
+        object_uris.each do |object_uri|
+          features[object_uri].update_for_event(event)
+        end
+      end
+    end
+    
+    def default_value
+      nil
+    end
+    
+    # interface methods
+    ['event_types', 'subject_uris_for_event', 'object_uris_for_subject_and_event', 'update'].each do |meth|
+      define_method(meth.to_sym) do
+        raise NotImplementedError.new("Subclasses of #{Ferret::Feature::Base.name} should define #{meth.inspect}. #{self.class.name} does not.")
+      end  
+    end
+    
   end
   
   def initialize(attrs)
@@ -50,7 +83,12 @@ class Ferret::Feature::Base
   
   def dirty?
     return true if new?
-    return if !!updates.detect(&:dirty?)
+    return !!updates.detect(&:dirty?)
+  end
+  
+  def only_last_update_is_dirty?
+    return false if new?
+    return updates.last.dirty? && (updates.slice(0, updates.size - 1)).map(&:dirty?).uniq == [false]
   end
   
   def identifying_hash(include_revision = false)
@@ -65,19 +103,56 @@ class Ferret::Feature::Base
   
   def save!
     raise Ferret::InvalidFeature.new(errors.full_messages) unless valid?
-    Ferret.adapter.save_feature(self)
+    Ferret.adapter.save_feature(self) if dirty?
   end
   
   def as_json
     identifying_hash(true).merge({
       'key' => key,
-      'updates' => updates.map(&:as_json),
-      '_type' => self.class.name
+      'updates' => updates.map(&:as_json)
     })
   end
   
   def key
     Ferret::Feature.get_key(identifying_hash)
+  end
+  
+  def current_value
+    updates.last.nil? ? default_value : updates.last.value
+  end
+  
+  def default_value
+    self.class.default_value
+  end
+  
+  def update_for_event(event, attempt = 1)
+    previous_update, previous_update_index = nil, -1
+    
+    update_time = event.finish_time.utc
+    (updates.size - 1).downto(0) do |i|
+      update = updates[i]
+      if update.time <= update_time
+        previous_update = update
+        previous_update_index = i
+        break
+      end
+    end
+    
+    previous_value = previous_update.nil? ? default_value : previous_update.value
+    
+    new_update = self.class::Update.new({
+      'time' => update_time,
+      'value' => self.class.update(previous_value, subject_uri, object_uri, event)
+    })
+    self.updates.insert(previous_update_index + 1, new_update)
+    
+    begin
+      save!
+    rescue Ferret::OutOfDateFeature => e
+      # FIXME: log something whenever this happens, raise after n attempts
+      reload
+      update_for_event(event, attempt += 1)
+    end
   end
   
   private
