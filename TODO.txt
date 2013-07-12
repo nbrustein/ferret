@@ -1,0 +1,9 @@
+* How do we deal with more complex features?  For example, what about a deeply hierarchical
+  grouping structure.  A user has a feature which is the list of groups he is in.  Each group has
+  a list of parent groups.  Each group and each user has a list of permissions and the union
+  is all of the permissions for the user.  The code for this is not so bad in prod, but what about
+  for data analysis?  
+  * Idea 1: Cache subjects in RAM, load up every update for each feature (within a time range?),
+    and then organize updates in a b-tree for fast lookup of updates for a particular time.  With
+    very large and numerous features, you could run out of RAM, but it seems unlikely for most
+    use cases.

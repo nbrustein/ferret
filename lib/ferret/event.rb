@@ -13,7 +13,7 @@ module Ferret::Event
       raise Ferret::UnexpectedEventType.new("Expected instance of #{klass} to have type #{expected_type.inspect} but had #{event_type.inspect}")
     end
     
-    klass.new(hash)
+    klass.from_hash(hash)
   end
   
 end

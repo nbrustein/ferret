@@ -14,8 +14,7 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
     class TestEvent < Ferret::Event::Base
       EVENT_TYPE = "test_event"
       
-      attr_accessor :prop
-      validates_presence_of :prop
+      key :prop, String
     end
     
     def test_saving_and_retrieving_a_feature

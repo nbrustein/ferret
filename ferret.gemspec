@@ -23,6 +23,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activesupport", ">= 4.0.0"
   spec.add_dependency "activemodel", ">= 4.0.0"
   spec.add_dependency "mongo", ">= 1.9"
-  spec.add_dependency "json-schema"
+  spec.add_dependency "active-model-json-schema"
   spec.add_dependency "mocha"
 end

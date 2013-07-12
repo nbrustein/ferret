@@ -7,9 +7,9 @@ class Ferret::EventSavingIntegrationTest < Ferret::FerretTestBase
   class TestEvent < Ferret::Event::Base
     EVENT_TYPE = "test_event"
 
-    attr_accessor :subject_uri, :object_uri, :inc
-    validates_presence_of :subject_uri, :object_uri, :inc
-
+    key :subject_uri, String
+    key :object_uri, String
+    key :inc, Numeric
   end
   
   class TestFeature < Ferret::Feature::Base
