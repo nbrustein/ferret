@@ -7,8 +7,8 @@ class Ferret::Adapters::Mongo
       collection(collection_name)
     end
     
-    def find_feature(key)
-      if doc = features_collection.find_one('key' => key)
+    def find_feature(key, options = {})
+      if doc = features_collection.find_one({'key' => key}, find_options(options))
         prepare_doc(doc)
       end
     end
@@ -18,18 +18,13 @@ class Ferret::Adapters::Mongo
         'subject_uri' => subject_uri,
         'feature_type' => feature_type
       }
-      find_options = {}
+      
       
       unless object_uris == :all
         selector['object_uri'] = {'$in' => object_uris}
       end
       
-      if options['updates_limit']
-        find_options[:fields] ||= {}
-        find_options[:fields]['asdasdas'] = { '$slice' => -options['updates_limit'] }
-      end
-      
-      docs = features_collection.find(selector, find_options)
+      docs = features_collection.find(selector, find_options(options))
       docs.map do |doc|
         prepare_doc(doc)
       end
@@ -66,6 +61,16 @@ class Ferret::Adapters::Mongo
     def prepare_doc(doc)
       doc.delete('_id')
       doc
+    end
+    
+    private
+    def find_options(options)
+      find_options = {}
+      if options['updates_limit']
+        find_options[:fields] ||= {}
+        find_options[:fields]['updates'] = { '$slice' => -options['updates_limit'] }
+      end
+      find_options
     end
   end
 end

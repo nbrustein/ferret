@@ -7,3 +7,8 @@
     and then organize updates in a b-tree for fast lookup of updates for a particular time.  With
     very large and numerous features, you could run out of RAM, but it seems unlikely for most
     use cases.
+
+
+* Consider not using times.  See http://api.mongodb.org/perl/current/MongoDB/DataTypes.html
+Warning: creating DateTime objects is extremely slow. Consider saving dates as numbers and converting the numbers to DateTimes when needed. A single DateTime field can make deserialization up to 10 times slower.
+

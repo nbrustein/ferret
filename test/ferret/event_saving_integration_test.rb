@@ -4,41 +4,6 @@ class Ferret::EventSavingIntegrationTest < Ferret::FerretTestBase
   
   use_configuration "ferret_gem_test"
   
-  class TestEvent < Ferret::Event::Base
-    EVENT_TYPE = "test_event"
-
-    key :subject_uri, String
-    key :object_uri, String
-    key :inc, Numeric
-  end
-  
-  class TestFeature < Ferret::Feature::Base
-    FEATURE_TYPE = "test_feature"
-    
-    def self.event_types 
-      [TestEvent::EVENT_TYPE]
-    end
-
-    def self.subject_uris_for_event(event)
-      event['subject_uri']
-    end
-
-    def self.object_uris_for_subject_and_event(subject_uri, event)
-      event['object_uri']
-    end
-
-    def self.update(current_value, subject_uri, object_uri, event)
-      current_value + event['inc']
-    end
-    
-    def self.default_value
-      0
-    end
-
-  end
-  
-  stub_feature_classes [TestFeature]
-  
   def test_updating_a_feature_when_saving_an_event
     params = {
       'subject_uri' => 'subject_uri',

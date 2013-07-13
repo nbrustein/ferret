@@ -6,7 +6,7 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
   class Ferret::MongoAdapterTest < Ferret::FerretTestBase
   
     use_configuration "mongo_adapter_test"
-  
+    
     class TestFeature < Ferret::Feature::Base
       FEATURE_TYPE = "test_feature"
     end
@@ -24,7 +24,7 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
         'subject_uri' => 's',
         'object_uri' => 'o',
         'updates' => [
-          TestFeature::Update.new({
+          TestFeature::Update::Direct.new({
             'time' => Time.at(0).utc,
             'value' => 'value'
           })

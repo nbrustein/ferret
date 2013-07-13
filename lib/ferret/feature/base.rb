@@ -23,7 +23,7 @@ class Ferret::Feature::Base
       updates = hash['updates'] || []
       updates = updates.map do |update|
         if update.is_a?(Hash)
-          self::Update.new(update)
+          Ferret::Feature::Update.from_hash(update)
         elsif update.is_a?(self.class::Update)
           update
         else
@@ -141,7 +141,7 @@ class Ferret::Feature::Base
     
     previous_value = previous_update.nil? ? default_value : previous_update.value
     
-    new_update = self.class::Update.new({
+    new_update = Ferret::Feature::Update::ByEvent.new({
       'time' => update_time,
       'value' => self.class.update(previous_value, subject_uri, object_uri, event)
     })
@@ -154,6 +154,18 @@ class Ferret::Feature::Base
       reload
       update_for_event(event, attempt += 1)
     end
+  end
+  
+  def add_update(update)
+    if last_update && update.time <= last_update.time
+      OutOfDateFeature.new("Cannot add an update when there is already an update at a later time.")
+    end
+    
+    self.updates << update
+  end
+  
+  def last_update
+    updates.last
   end
   
   private

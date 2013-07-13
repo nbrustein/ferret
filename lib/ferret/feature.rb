@@ -2,9 +2,15 @@ require File.expand_path("../../ferret", __FILE__)
 
 module Ferret::Feature
   
-  def self.find(identifying_hash_or_key)
+  def self.find(identifying_hash_or_key, options = {})
     key = identifying_hash_or_key.is_a?(Hash) ? get_key(identifying_hash_or_key) : identifying_hash_or_key
-    from_hash Ferret.adapter.find_feature(key)
+    doc = Ferret.adapter.find_feature(key, options)
+    
+    if doc.nil?
+      doc = identifying_hash_or_key.is_a?(Hash) ? identifying_hash_or_key : get_identifying_hash(key)
+    end
+    
+    from_hash(doc)
   end
     
   def self.get_key(hash)
@@ -13,6 +19,15 @@ module Ferret::Feature
       hash['subject_uri'],
       hash['object_uri']
     ].join("~~~")
+  end
+  
+  def self.get_identifying_hash(key)
+    feature_type, subject_uri, object_uri = key.split("~~~")
+    {
+      'feature_type' => feature_type,
+      'subject_uri' => subject_uri,
+      'object_uri' => object_uri
+    }
   end
   
   def self.from_hash(hash)
