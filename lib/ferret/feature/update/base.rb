@@ -4,7 +4,7 @@ class Ferret::Feature::Update::Base
   include ActiveModel::Model
   
   attr_accessor :time, :value, :feature, :new, :updated_at, :metadata, :_type
-  validates_presence_of :time, :value, :metadata, :_type
+  validates_presence_of :time, :value, :_type
   
   def initialize(attrs)
     super({
@@ -23,7 +23,7 @@ class Ferret::Feature::Update::Base
       'time' => time.utc,
       'value' => value,
       'updated_at' => Time.now.utc,
-      'metadata' => metadata,
+      'metadata' => metadata || {},
       '_type' => _type
     }
   end

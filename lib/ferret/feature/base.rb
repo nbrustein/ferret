@@ -14,28 +14,14 @@ class Ferret::Feature::Base
   
   attr_accessor :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
   validates_presence_of :subject_uri, :feature_type, :object_uri, :key, :updates, :revision
+  delegate :all_updates_loaded?, :to => :updates
   
-  after_validation :validate_updates
+  before_validation :validate_updates
   
   class << self
     
-    def from_hash(hash)
-      updates = hash['updates'] || []
-      updates = updates.map do |update|
-        if update.is_a?(Hash)
-          Ferret::Feature::Update.from_hash(update)
-        elsif update.is_a?(self.class::Update)
-          update
-        else
-          raise Ferret::NotAndUpdate.new(update)
-        end
-      end
-      new(hash.merge({
-        'updates' => updates
-      }))
-    end
-    
     def update_for_event(event)
+      return unless self.event_types.include?(event.event_type)
       subject_uris = self.subject_uris_for_event(event)
       return if subject_uris.nil?
       subject_uris = [subject_uris] unless subject_uris.is_a?(Array)
@@ -44,12 +30,12 @@ class Ferret::Feature::Base
         object_uris = object_uris_for_subject_and_event(subject_uri, event)
         next if object_uris.nil?
         object_uris = [object_uris] unless object_uris.is_a?(Array)
-        features = Ferret::Feature.get_features(
+        features = Ferret::Feature.find(
           subject_uri, 
           self::FEATURE_TYPE, 
           object_uris,
           {
-            'updates_start' => {'last_before' => event.finish_time}
+            'load_updates' => {'last_before' => event.finish_time, 'upto' => :now}
           })
         object_uris.each do |object_uri|
           features[object_uri].update_for_event(event)
@@ -71,9 +57,7 @@ class Ferret::Feature::Base
   end
   
   def initialize(attrs)
-    super({
-      'updates' => []
-    }.merge(attrs))
+    super
     self.feature_type = self.class::FEATURE_TYPE
     self.revision = 0 if self.revision.nil?
   end
@@ -143,7 +127,8 @@ class Ferret::Feature::Base
     
     new_update = Ferret::Feature::Update::ByEvent.new({
       'time' => update_time,
-      'value' => self.class.update(previous_value, subject_uri, object_uri, event)
+      'value' => self.class.update(previous_value, subject_uri, object_uri, event),
+      'metadata' => {'event_key' => event.key}
     })
     self.updates.insert(previous_update_index + 1, new_update)
     
@@ -170,12 +155,14 @@ class Ferret::Feature::Base
   
   private
   def validate_updates
-    updates.each_with_index do |update, i|
-      unless update.valid?
-        update.errors.each do |key, message|
-          errors.add("updates[#{i}]:#{key}", message)
+    if updates.is_a?(Ferret::Feature::Updates)
+      unless updates.valid?
+        updates.errors.each do |key, message|
+          errors.add("updates:#{key}", message)
         end
       end
+    else  
+      errors.add("updates", "is not an instance of Ferret::Feature::Updates. Is #{self.updates.class}")
     end
   end
   

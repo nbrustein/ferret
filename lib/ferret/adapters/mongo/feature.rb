@@ -19,7 +19,6 @@ class Ferret::Adapters::Mongo
         'feature_type' => feature_type
       }
       
-      
       unless object_uris == :all
         selector['object_uri'] = {'$in' => object_uris}
       end
@@ -45,6 +44,7 @@ class Ferret::Adapters::Mongo
         feature.revision += 1
         features_collection.update({'key' => feature.key}, feature.as_json)
       else
+        # the problem is that we have one or more diirty updates 
         raise "something"
       end
 
@@ -60,6 +60,9 @@ class Ferret::Adapters::Mongo
     private
     def prepare_doc(doc)
       doc.delete('_id')
+      doc['updates'].each do |update|
+        update['new'] = false
+      end
       doc
     end
     

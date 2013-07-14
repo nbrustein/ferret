@@ -24,7 +24,7 @@ class Ferret::Event::Base
   end
   
   def [](key)
-    send(key.to_sym)
+    respond_to?(key.to_sym) ? send(key.to_sym) : nil
   end
   
   def update_features

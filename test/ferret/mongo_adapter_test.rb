@@ -7,12 +7,8 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
   
     use_configuration "mongo_adapter_test"
     
-    class TestFeature < Ferret::Feature::Base
-      FEATURE_TYPE = "test_feature"
-    end
-    
     class TestEvent < Ferret::Event::Base
-      EVENT_TYPE = "test_event"
+      EVENT_TYPE = "mongo_adapter_test_event"
       
       key :prop, String
     end
@@ -23,17 +19,17 @@ if Ferret::Configuration.has_config?('mongo_adapter_test')
       feature = TestFeature.new({
         'subject_uri' => 's',
         'object_uri' => 'o',
-        'updates' => [
-          TestFeature::Update::Direct.new({
+        'updates' => Ferret::Feature::Updates.new([
+          Ferret::Feature::Update::Direct.new({
             'time' => Time.at(0).utc,
             'value' => 'value'
           })
-        ]
+        ], [])
       })
       feature.save!
       assert_equal 1, feature.revision
-      reloaded = Ferret::Feature.find(feature.identifying_hash)
-      assert_equal TestFeature, reloaded.class
+      reloaded = Ferret::Feature.find_one('s', feature.feature_type, 'o')
+      assert_equal TestFeature, reloaded.class, "Unexpected class for reloaded feature"
       assert_equal feature.as_json, reloaded.as_json
     end
     
