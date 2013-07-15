@@ -4,7 +4,18 @@ class Ferret::Adapters::Mongo
     
     def features_collection
       collection_name = @configuration['features_collection'] || 'features'
-      collection(collection_name)
+      coll = collection(collection_name)
+      
+      # FIXME: better to do this in a migration that can be made part of a rollout process
+      unless @indexes_initialized
+        coll.ensure_index([
+          ['feature_type', Mongo::ASCENDING],
+          ['subject_uri', Mongo::ASCENDING],
+          ['object_uri', Mongo::ASCENDING]
+        ], {:unique => true})
+        @indexes_initialized = true
+      end
+      coll
     end
     
     def find_feature(key, options = {})
