@@ -2,15 +2,16 @@ require File.expand_path("../../feature", __FILE__)
 
 class Ferret::Feature::DirectUpdater
   
-  attr_reader :feature, :new_value, :time, :metadata
+  attr_reader :feature, :new_value, :time, :metadata, :current_revision
   
-  def initialize(identifying_hash, new_value, time, metadata = {})
+  def initialize(identifying_hash, current_revision, new_value, time, metadata = {})
     @feature = Ferret::Feature.find_one(
       identifying_hash['subject_uri'], 
       identifying_hash['feature_type'], 
       identifying_hash['object_uri'], 
       {'updates_limit' => 1}
     )
+    @current_revision = current_revision
     @new_value = new_value
     @time = time
     @metadata = metadata
@@ -21,8 +22,12 @@ class Ferret::Feature::DirectUpdater
   end
   
   def update
+    if @feature.revision != current_revision
+      raise Ferret::OutOfDateFeature.new("DirectUpdater cannot update a feature with an unexpected revision. #{@feature.revision} != #{current_revision}")
+    end
+    
     if @feature.last_update && @feature.last_update.time >= time
-      raise OutOfDateFeature.new("DirectUpdater cannot update feature that already has an update at a later time")
+      raise Ferret::OutOfDateFeature.new("DirectUpdater cannot update feature that already has an update at a later time")
     end
     
     new_update = Ferret::Feature::Update::Direct.new({
