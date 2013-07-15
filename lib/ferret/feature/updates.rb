@@ -7,7 +7,7 @@ class Ferret::Feature::Updates
   
   attr_reader :updates, :loaded_range
   before_validation :validate_updates
-  delegate :each, :last, :size, :first, :insert, :[], :slice, :to => :updates
+  delegate :each, :last, :size, :first, :insert, :[], :slice, :<<, :to => :updates
   
   def self.from_hashes(update_hashes, load_options)
     updates = update_hashes.map do |hash|

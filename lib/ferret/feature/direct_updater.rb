@@ -5,7 +5,12 @@ class Ferret::Feature::DirectUpdater
   attr_reader :feature, :new_value, :time, :metadata
   
   def initialize(identifying_hash, new_value, time, metadata = {})
-    @feature = Ferret::Feature.find(identifying_hash, {'updates_limit' => 1})
+    @feature = Ferret::Feature.find_one(
+      identifying_hash['subject_uri'], 
+      identifying_hash['feature_type'], 
+      identifying_hash['object_uri'], 
+      {'updates_limit' => 1}
+    )
     @new_value = new_value
     @time = time
     @metadata = metadata
